@@ -21,6 +21,9 @@
     <ClInclude Include="JsonParser.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="JsonWriter.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="JsonValue.cpp">
@@ -33,6 +36,12 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="JsonParserTest.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="JsonWriter.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="JsonWriterTest.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">

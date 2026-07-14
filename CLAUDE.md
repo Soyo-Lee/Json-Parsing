@@ -19,7 +19,7 @@ Supported platforms: `x64` and `Win32` (x86). Toolset `v145`, language standard 
 
 ## Running
 
-The built executable is a console program (no command-line args expected yet, pending implementation).
+In Release, `main()` builds a sample `JsonValue` object tree, saves it to `person.json` (pretty-printed) via `JsonWriter::SaveToFile`, then reparses that file via `JsonParser::ParseFile` and prints selected fields back out — a round-trip demo. In Debug, `main()` is the gtest runner instead (see Tests below).
 
 ## Tests
 
@@ -33,6 +33,7 @@ Development follows TDD, tracked across `docs/phase1.md` (JsonValue), `docs/phas
 - `JsonValueTest.cpp` — gtest cases for construction, type predicates, accessors, indexing, and exception behavior.
 - `JsonParser.h`/`.cpp` — recursive-descent parser, JSON text → `JsonValue` tree. `Parse(text)` parses a string; `ParseFile(path)` reads a file then parses it. Handles null/bool/number (incl. negative/decimal/exponent)/string (incl. escapes and `\uXXXX`, BMP only — no surrogate-pair decoding)/array/object, with whitespace skipped between tokens. Any syntax error (empty input, invalid literal, unterminated string, mismatched brackets, trailing garbage, missing file) throws `JsonParseException` with the byte offset where parsing failed.
 - `JsonParserTest.cpp` — gtest cases covering each value type, nesting, whitespace tolerance, and the error paths above.
-- `JsonWriter` (planned, see `docs/phase3.md`) — `JsonValue` tree → JSON text, plus save-to-file.
+- `JsonWriter.h`/`.cpp` — `JsonValue` tree → JSON text. `Write(value, pretty, indentSize)` serializes to a string (compact by default); `SaveToFile(value, path, pretty, indentSize)` writes it to disk, throwing `JsonWriteException` if the file can't be opened/written. Numbers are formatted via `std::to_chars` (shortest round-trippable representation, so whole numbers print without a trailing `.0`); strings re-escape `"`, `\`, and control characters.
+- `JsonWriterTest.cpp` — gtest cases for each value type's output, compact vs. pretty-printed nesting, and round-tripping through `JsonParser` (both in-memory and via a saved file).
 
 Update this section as the parser/writer files are added, following the pattern above (list each file and what it owns).

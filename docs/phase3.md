@@ -7,5 +7,7 @@
 
 ## 상태
 
-- [ ] `JsonWriter.h` / `JsonWriter.cpp` 작성
-- [ ] `main.cpp` 데모 작성
+- [x] `JsonWriterTest.cpp` 작성 완료 (RED) — 11개 테스트 (compact/pretty 출력, 이스케이프, 파서 왕복, 파일 저장/실패)
+- [x] `JsonWriter.h` / `JsonWriter.cpp` 작성 완료 (GREEN) — `std::to_chars`로 숫자를 최단 왕복 표현으로 출력 (정수는 `.0` 없이)
+- [x] `main.cpp`의 Release 분기에서 값 트리 구성 → 파일 저장 → 재파싱 데모 작성, Release 빌드로 직접 실행 확인
+- [x] 전체 테스트(44개) 통과 확인
