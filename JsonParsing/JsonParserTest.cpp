@@ -4,6 +4,11 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
+using std::ios;
+using std::ofstream;
+using std::remove;
+using std::string;
+
 namespace
 {
 class JsonParserTest : public ::testing::Test
@@ -11,10 +16,10 @@ class JsonParserTest : public ::testing::Test
 protected:
     void TearDown() override
     {
-        std::remove(path_.c_str());
+        remove(path_.c_str());
     }
 
-    std::string path_ = "json_parser_test_input.json";
+    string path_ = "json_parser_test_input.json";
 };
 } // namespace
 
@@ -163,7 +168,7 @@ TEST_F(JsonParserTest, ThrowsOnMismatchedBrackets)
 TEST_F(JsonParserTest, ParsesFromFile)
 {
     {
-        std::ofstream out(path_, std::ios::binary);
+        ofstream out(path_, ios::binary);
         out << R"({"key": "value"})";
     }
 

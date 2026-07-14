@@ -4,26 +4,34 @@
 #include <fstream>
 #include <sstream>
 
-JsonValue JsonParser::Parse(const std::string& text)
+using std::ifstream;
+using std::ios;
+using std::isdigit;
+using std::move;
+using std::ostringstream;
+using std::stod;
+using std::to_string;
+
+JsonValue JsonParser::Parse(const string& text)
 {
     JsonParser parser(text);
     return parser.ParseDocument();
 }
 
-JsonValue JsonParser::ParseFile(const std::string& path)
+JsonValue JsonParser::ParseFile(const string& path)
 {
-    std::ifstream file(path, std::ios::binary);
+    ifstream file(path, ios::binary);
     if (!file)
     {
         throw JsonParseException("Could not open file: " + path);
     }
 
-    std::ostringstream buffer;
+    ostringstream buffer;
     buffer << file.rdbuf();
     return Parse(buffer.str());
 }
 
-JsonParser::JsonParser(const std::string& text) : text_(text), pos_(0) {}
+JsonParser::JsonParser(const string& text) : text_(text), pos_(0) {}
 
 JsonValue JsonParser::ParseDocument()
 {
@@ -59,11 +67,11 @@ JsonValue JsonParser::ParseValue()
     case 'n':
         return ParseLiteral();
     default:
-        if (c == '-' || std::isdigit(static_cast<unsigned char>(c)))
+        if (c == '-' || isdigit(static_cast<unsigned char>(c)))
         {
             return ParseNumber();
         }
-        Fail(std::string("Unexpected character '") + c + "' while expecting a value");
+        Fail(string("Unexpected character '") + c + "' while expecting a value");
     }
 }
 
@@ -76,7 +84,7 @@ JsonValue JsonParser::ParseObject()
     if (!IsAtEnd() && Peek() == '}')
     {
         Advance();
-        return JsonValue(std::move(members));
+        return JsonValue(move(members));
     }
 
     while (true)
@@ -86,13 +94,13 @@ JsonValue JsonParser::ParseObject()
         {
             Fail("Expected string key in object");
         }
-        std::string key = ParseRawString();
+        string key = ParseRawString();
 
         SkipWhitespace();
         Expect(':');
 
         JsonValue value = ParseValue();
-        members.emplace_back(std::move(key), std::move(value));
+        members.emplace_back(move(key), move(value));
 
         SkipWhitespace();
         if (IsAtEnd())
@@ -112,7 +120,7 @@ JsonValue JsonParser::ParseObject()
         Fail("Expected ',' or '}' in object");
     }
 
-    return JsonValue(std::move(members));
+    return JsonValue(move(members));
 }
 
 JsonValue JsonParser::ParseArray()
@@ -124,13 +132,13 @@ JsonValue JsonParser::ParseArray()
     if (!IsAtEnd() && Peek() == ']')
     {
         Advance();
-        return JsonValue(std::move(elements));
+        return JsonValue(move(elements));
     }
 
     while (true)
     {
         JsonValue value = ParseValue();
-        elements.push_back(std::move(value));
+        elements.push_back(move(value));
 
         SkipWhitespace();
         if (IsAtEnd())
@@ -150,7 +158,7 @@ JsonValue JsonParser::ParseArray()
         Fail("Expected ',' or ']' in array");
     }
 
-    return JsonValue(std::move(elements));
+    return JsonValue(move(elements));
 }
 
 JsonValue JsonParser::ParseString()
@@ -158,10 +166,10 @@ JsonValue JsonParser::ParseString()
     return JsonValue(ParseRawString());
 }
 
-std::string JsonParser::ParseRawString()
+string JsonParser::ParseRawString()
 {
     Expect('"');
-    std::string result;
+    string result;
 
     while (true)
     {
@@ -226,7 +234,7 @@ std::string JsonParser::ParseRawString()
                 break;
             }
             default:
-                Fail(std::string("Invalid escape character '") + escape + "' in string");
+                Fail(string("Invalid escape character '") + escape + "' in string");
             }
         }
         else
@@ -246,11 +254,11 @@ JsonValue JsonParser::ParseNumber()
     {
         Advance();
     }
-    if (IsAtEnd() || !std::isdigit(static_cast<unsigned char>(Peek())))
+    if (IsAtEnd() || !isdigit(static_cast<unsigned char>(Peek())))
     {
         Fail("Invalid number: expected digit");
     }
-    while (!IsAtEnd() && std::isdigit(static_cast<unsigned char>(Peek())))
+    while (!IsAtEnd() && isdigit(static_cast<unsigned char>(Peek())))
     {
         Advance();
     }
@@ -258,11 +266,11 @@ JsonValue JsonParser::ParseNumber()
     if (!IsAtEnd() && Peek() == '.')
     {
         Advance();
-        if (IsAtEnd() || !std::isdigit(static_cast<unsigned char>(Peek())))
+        if (IsAtEnd() || !isdigit(static_cast<unsigned char>(Peek())))
         {
             Fail("Invalid number: expected digit after decimal point");
         }
-        while (!IsAtEnd() && std::isdigit(static_cast<unsigned char>(Peek())))
+        while (!IsAtEnd() && isdigit(static_cast<unsigned char>(Peek())))
         {
             Advance();
         }
@@ -275,18 +283,18 @@ JsonValue JsonParser::ParseNumber()
         {
             Advance();
         }
-        if (IsAtEnd() || !std::isdigit(static_cast<unsigned char>(Peek())))
+        if (IsAtEnd() || !isdigit(static_cast<unsigned char>(Peek())))
         {
             Fail("Invalid number: expected digit in exponent");
         }
-        while (!IsAtEnd() && std::isdigit(static_cast<unsigned char>(Peek())))
+        while (!IsAtEnd() && isdigit(static_cast<unsigned char>(Peek())))
         {
             Advance();
         }
     }
 
-    std::string numberText = text_.substr(start, pos_ - start);
-    return JsonValue(std::stod(numberText));
+    string numberText = text_.substr(start, pos_ - start);
+    return JsonValue(stod(numberText));
 }
 
 JsonValue JsonParser::ParseLiteral()
@@ -344,12 +352,12 @@ void JsonParser::Expect(char expected)
 {
     if (IsAtEnd() || Peek() != expected)
     {
-        Fail(std::string("Expected '") + expected + "'");
+        Fail(string("Expected '") + expected + "'");
     }
     Advance();
 }
 
-void JsonParser::Fail(const std::string& message) const
+void JsonParser::Fail(const string& message) const
 {
-    throw JsonParseException(message + " (at position " + std::to_string(pos_) + ")");
+    throw JsonParseException(message + " (at position " + to_string(pos_) + ")");
 }

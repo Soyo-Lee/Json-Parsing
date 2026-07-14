@@ -5,20 +5,23 @@
 #include <stdexcept>
 #include <string>
 
-class JsonParseException : public std::runtime_error
+using std::runtime_error;
+using std::string;
+
+class JsonParseException : public runtime_error
 {
 public:
-    explicit JsonParseException(const std::string& message) : std::runtime_error(message) {}
+    explicit JsonParseException(const string& message) : runtime_error(message) {}
 };
 
 class JsonParser
 {
 public:
-    static JsonValue Parse(const std::string& text);
-    static JsonValue ParseFile(const std::string& path);
+    static JsonValue Parse(const string& text);
+    static JsonValue ParseFile(const string& path);
 
 private:
-    explicit JsonParser(const std::string& text);
+    explicit JsonParser(const string& text);
 
     JsonValue ParseDocument();
     JsonValue ParseValue();
@@ -27,15 +30,15 @@ private:
     JsonValue ParseString();
     JsonValue ParseNumber();
     JsonValue ParseLiteral();
-    std::string ParseRawString();
+    string ParseRawString();
 
     void SkipWhitespace();
     char Peek() const;
     char Advance();
     bool IsAtEnd() const;
     void Expect(char expected);
-    [[noreturn]] void Fail(const std::string& message) const;
+    [[noreturn]] void Fail(const string& message) const;
 
-    std::string text_;
+    string text_;
     size_t pos_;
 };

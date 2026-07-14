@@ -3,6 +3,9 @@
 #include <cstdio>
 #include <gtest/gtest.h>
 
+using std::remove;
+using std::string;
+
 namespace
 {
 class JsonFileRepositoryTest : public ::testing::Test
@@ -10,10 +13,10 @@ class JsonFileRepositoryTest : public ::testing::Test
 protected:
     void TearDown() override
     {
-        std::remove(path_.c_str());
+        remove(path_.c_str());
     }
 
-    std::string path_ = "json_file_repository_test.json";
+    string path_ = "json_file_repository_test.json";
 };
 } // namespace
 
@@ -158,7 +161,7 @@ TEST_F(JsonFileRepositoryTest, UpdateReturnsFalseWhenIdMissing)
 
 TEST_F(JsonFileRepositoryTest, UpdatePersistsAcrossInstances)
 {
-    std::string id;
+    string id;
     {
         JsonFileRepository repo(path_);
         JsonValue created = repo.Create(JsonValue::MakeObject());
@@ -207,7 +210,7 @@ TEST_F(JsonFileRepositoryTest, DeleteReturnsFalseWhenIdMissing)
 
 TEST_F(JsonFileRepositoryTest, DeletePersistsAcrossInstances)
 {
-    std::string id;
+    string id;
     {
         JsonFileRepository repo(path_);
         JsonValue created = repo.Create(JsonValue::MakeObject());

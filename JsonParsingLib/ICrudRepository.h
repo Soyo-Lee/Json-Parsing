@@ -4,6 +4,8 @@
 
 #include <string>
 
+using std::string;
+
 // 저장 방식(파일/DB 등)에 무관하게 호출 측이 의존할 수 있는 CRUD 인터페이스.
 class ICrudRepository
 {
@@ -18,11 +20,11 @@ public:
     virtual const JsonValue::ArrayType& ReadAll() const = 0;
 
     // id에 해당하는 레코드를 찾는다. 없으면 nullptr을 반환한다.
-    virtual const JsonValue* ReadById(const std::string& id) const = 0;
+    virtual const JsonValue* ReadById(const string& id) const = 0;
 
     // id에 해당하는 레코드에 fields의 각 항목을 병합 적용한다. 레코드가 없으면 false.
-    virtual bool Update(const std::string& id, const JsonValue::ObjectType& fields) = 0;
+    virtual bool Update(const string& id, const JsonValue::ObjectType& fields) = 0;
 
     // id에 해당하는 레코드를 삭제한다. 레코드가 없으면 false.
-    virtual bool Delete(const std::string& id) = 0;
+    virtual bool Delete(const string& id) = 0;
 };

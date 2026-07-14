@@ -4,6 +4,9 @@
 #include <cstdio>
 #include <gtest/gtest.h>
 
+using std::remove;
+using std::string;
+
 namespace
 {
 class JsonWriterTest : public ::testing::Test
@@ -11,7 +14,7 @@ class JsonWriterTest : public ::testing::Test
 protected:
     void TearDown() override
     {
-        std::remove(path_.c_str());
+        remove(path_.c_str());
     }
 
     static bool DeepEquals(const JsonValue& a, const JsonValue& b)
@@ -68,7 +71,7 @@ protected:
         return false;
     }
 
-    std::string path_ = "json_writer_test_output.json";
+    string path_ = "json_writer_test_output.json";
 };
 } // namespace
 
@@ -98,7 +101,7 @@ TEST_F(JsonWriterTest, WritesFractionalNumber)
 
 TEST_F(JsonWriterTest, WritesStringWithEscapes)
 {
-    JsonValue value(std::string("line\nbreak\t\"quoted\"\\slash"));
+    JsonValue value(string("line\nbreak\t\"quoted\"\\slash"));
     EXPECT_EQ(JsonWriter::Write(value), "\"line\\nbreak\\t\\\"quoted\\\"\\\\slash\"");
 }
 
@@ -131,7 +134,7 @@ TEST_F(JsonWriterTest, PrettyPrintIndentsNestedStructures)
     tags.push_back(JsonValue("b"));
     object["tags"] = JsonValue(tags);
 
-    std::string expected =
+    string expected =
         "{\n"
         "  \"name\": \"Alice\",\n"
         "  \"tags\": [\n"
@@ -154,7 +157,7 @@ TEST_F(JsonWriterTest, RoundTripsThroughParser)
     scores.push_back(JsonValue(2.5));
     object["scores"] = JsonValue(scores);
 
-    std::string json = JsonWriter::Write(object, /*pretty=*/true);
+    string json = JsonWriter::Write(object, /*pretty=*/true);
     JsonValue reparsed = JsonParser::Parse(json);
 
     EXPECT_TRUE(DeepEquals(object, reparsed));
