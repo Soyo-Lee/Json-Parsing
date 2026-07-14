@@ -2,104 +2,113 @@
 #include "JsonParser.h"
 
 #include <cstdio>
-#include <fstream>
 #include <gtest/gtest.h>
-#include <sstream>
 
 namespace
 {
-bool DeepEquals(const JsonValue& a, const JsonValue& b)
+class JsonWriterTest : public ::testing::Test
 {
-    if (a.GetType() != b.GetType())
+protected:
+    void TearDown() override
     {
+        std::remove(path_.c_str());
+    }
+
+    static bool DeepEquals(const JsonValue& a, const JsonValue& b)
+    {
+        if (a.GetType() != b.GetType())
+        {
+            return false;
+        }
+        switch (a.GetType())
+        {
+        case JsonValue::Type::Null:
+            return true;
+        case JsonValue::Type::Boolean:
+            return a.AsBoolean() == b.AsBoolean();
+        case JsonValue::Type::Number:
+            return a.AsNumber() == b.AsNumber();
+        case JsonValue::Type::String:
+            return a.AsString() == b.AsString();
+        case JsonValue::Type::Array:
+        {
+            const auto& arrayA = a.AsArray();
+            const auto& arrayB = b.AsArray();
+            if (arrayA.size() != arrayB.size())
+            {
+                return false;
+            }
+            for (size_t i = 0; i < arrayA.size(); ++i)
+            {
+                if (!DeepEquals(arrayA[i], arrayB[i]))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        case JsonValue::Type::Object:
+        {
+            const auto& objectA = a.AsObject();
+            const auto& objectB = b.AsObject();
+            if (objectA.size() != objectB.size())
+            {
+                return false;
+            }
+            for (size_t i = 0; i < objectA.size(); ++i)
+            {
+                if (objectA[i].first != objectB[i].first || !DeepEquals(objectA[i].second, objectB[i].second))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        }
         return false;
     }
-    switch (a.GetType())
-    {
-    case JsonValue::Type::Null:
-        return true;
-    case JsonValue::Type::Boolean:
-        return a.AsBoolean() == b.AsBoolean();
-    case JsonValue::Type::Number:
-        return a.AsNumber() == b.AsNumber();
-    case JsonValue::Type::String:
-        return a.AsString() == b.AsString();
-    case JsonValue::Type::Array:
-    {
-        const auto& arrayA = a.AsArray();
-        const auto& arrayB = b.AsArray();
-        if (arrayA.size() != arrayB.size())
-        {
-            return false;
-        }
-        for (size_t i = 0; i < arrayA.size(); ++i)
-        {
-            if (!DeepEquals(arrayA[i], arrayB[i]))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-    case JsonValue::Type::Object:
-    {
-        const auto& objectA = a.AsObject();
-        const auto& objectB = b.AsObject();
-        if (objectA.size() != objectB.size())
-        {
-            return false;
-        }
-        for (size_t i = 0; i < objectA.size(); ++i)
-        {
-            if (objectA[i].first != objectB[i].first || !DeepEquals(objectA[i].second, objectB[i].second))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-    }
-    return false;
-}
+
+    std::string path_ = "json_writer_test_output.json";
+};
 } // namespace
 
-TEST(JsonWriterTest, WritesNull)
+TEST_F(JsonWriterTest, WritesNull)
 {
     EXPECT_EQ(JsonWriter::Write(JsonValue()), "null");
 }
 
-TEST(JsonWriterTest, WritesBoolean)
+TEST_F(JsonWriterTest, WritesBoolean)
 {
     EXPECT_EQ(JsonWriter::Write(JsonValue(true)), "true");
     EXPECT_EQ(JsonWriter::Write(JsonValue(false)), "false");
 }
 
-TEST(JsonWriterTest, WritesIntegralNumberWithoutTrailingZero)
+TEST_F(JsonWriterTest, WritesIntegralNumberWithoutTrailingZero)
 {
     EXPECT_EQ(JsonWriter::Write(JsonValue(42)), "42");
     EXPECT_EQ(JsonWriter::Write(JsonValue(-3)), "-3");
     EXPECT_EQ(JsonWriter::Write(JsonValue(0)), "0");
 }
 
-TEST(JsonWriterTest, WritesFractionalNumber)
+TEST_F(JsonWriterTest, WritesFractionalNumber)
 {
     EXPECT_EQ(JsonWriter::Write(JsonValue(3.14)), "3.14");
     EXPECT_EQ(JsonWriter::Write(JsonValue(-0.5)), "-0.5");
 }
 
-TEST(JsonWriterTest, WritesStringWithEscapes)
+TEST_F(JsonWriterTest, WritesStringWithEscapes)
 {
     JsonValue value(std::string("line\nbreak\t\"quoted\"\\slash"));
     EXPECT_EQ(JsonWriter::Write(value), "\"line\\nbreak\\t\\\"quoted\\\"\\\\slash\"");
 }
 
-TEST(JsonWriterTest, WritesEmptyArrayAndObjectCompact)
+TEST_F(JsonWriterTest, WritesEmptyArrayAndObjectCompact)
 {
     EXPECT_EQ(JsonWriter::Write(JsonValue::MakeArray()), "[]");
     EXPECT_EQ(JsonWriter::Write(JsonValue::MakeObject()), "{}");
 }
 
-TEST(JsonWriterTest, WritesCompactArrayAndObject)
+TEST_F(JsonWriterTest, WritesCompactArrayAndObject)
 {
     JsonValue::ArrayType elements;
     elements.push_back(JsonValue(1));
@@ -113,7 +122,7 @@ TEST(JsonWriterTest, WritesCompactArrayAndObject)
     EXPECT_EQ(JsonWriter::Write(object), R"({"name":"Alice","age":30})");
 }
 
-TEST(JsonWriterTest, PrettyPrintIndentsNestedStructures)
+TEST_F(JsonWriterTest, PrettyPrintIndentsNestedStructures)
 {
     JsonValue object = JsonValue::MakeObject();
     object["name"] = JsonValue("Alice");
@@ -133,7 +142,7 @@ TEST(JsonWriterTest, PrettyPrintIndentsNestedStructures)
     EXPECT_EQ(JsonWriter::Write(object, /*pretty=*/true), expected);
 }
 
-TEST(JsonWriterTest, RoundTripsThroughParser)
+TEST_F(JsonWriterTest, RoundTripsThroughParser)
 {
     JsonValue object = JsonValue::MakeObject();
     object["name"] = JsonValue("Bob");
@@ -151,22 +160,18 @@ TEST(JsonWriterTest, RoundTripsThroughParser)
     EXPECT_TRUE(DeepEquals(object, reparsed));
 }
 
-TEST(JsonWriterTest, SavesToFileAndRoundTrips)
+TEST_F(JsonWriterTest, SavesToFileAndRoundTrips)
 {
-    const std::string path = "json_writer_test_output.json";
-
     JsonValue object = JsonValue::MakeObject();
     object["key"] = JsonValue("value");
 
-    JsonWriter::SaveToFile(object, path);
+    JsonWriter::SaveToFile(object, path_);
 
-    JsonValue reparsed = JsonParser::ParseFile(path);
+    JsonValue reparsed = JsonParser::ParseFile(path_);
     EXPECT_TRUE(DeepEquals(object, reparsed));
-
-    std::remove(path.c_str());
 }
 
-TEST(JsonWriterTest, SaveToFileThrowsWhenPathIsInvalid)
+TEST_F(JsonWriterTest, SaveToFileThrowsWhenPathIsInvalid)
 {
     JsonValue value(1);
     EXPECT_THROW(JsonWriter::SaveToFile(value, "no_such_directory/output.json"), JsonWriteException);

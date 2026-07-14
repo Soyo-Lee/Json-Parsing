@@ -4,66 +4,80 @@
 #include <fstream>
 #include <gtest/gtest.h>
 
-TEST(JsonParserTest, ParsesNull)
+namespace
+{
+class JsonParserTest : public ::testing::Test
+{
+protected:
+    void TearDown() override
+    {
+        std::remove(path_.c_str());
+    }
+
+    std::string path_ = "json_parser_test_input.json";
+};
+} // namespace
+
+TEST_F(JsonParserTest, ParsesNull)
 {
     JsonValue value = JsonParser::Parse("null");
     EXPECT_TRUE(value.IsNull());
 }
 
-TEST(JsonParserTest, ParsesTrueAndFalse)
+TEST_F(JsonParserTest, ParsesTrueAndFalse)
 {
     EXPECT_TRUE(JsonParser::Parse("true").AsBoolean());
     EXPECT_FALSE(JsonParser::Parse("false").AsBoolean());
 }
 
-TEST(JsonParserTest, ParsesIntegerNumber)
+TEST_F(JsonParserTest, ParsesIntegerNumber)
 {
     JsonValue value = JsonParser::Parse("42");
     EXPECT_TRUE(value.IsNumber());
     EXPECT_DOUBLE_EQ(value.AsNumber(), 42.0);
 }
 
-TEST(JsonParserTest, ParsesNegativeAndDecimalNumber)
+TEST_F(JsonParserTest, ParsesNegativeAndDecimalNumber)
 {
     EXPECT_DOUBLE_EQ(JsonParser::Parse("-17").AsNumber(), -17.0);
     EXPECT_DOUBLE_EQ(JsonParser::Parse("3.14").AsNumber(), 3.14);
     EXPECT_DOUBLE_EQ(JsonParser::Parse("-0.5").AsNumber(), -0.5);
 }
 
-TEST(JsonParserTest, ParsesNumberWithExponent)
+TEST_F(JsonParserTest, ParsesNumberWithExponent)
 {
     EXPECT_DOUBLE_EQ(JsonParser::Parse("1e2").AsNumber(), 100.0);
     EXPECT_DOUBLE_EQ(JsonParser::Parse("1.5E+2").AsNumber(), 150.0);
     EXPECT_DOUBLE_EQ(JsonParser::Parse("2e-1").AsNumber(), 0.2);
 }
 
-TEST(JsonParserTest, ParsesSimpleString)
+TEST_F(JsonParserTest, ParsesSimpleString)
 {
     JsonValue value = JsonParser::Parse("\"hello\"");
     EXPECT_TRUE(value.IsString());
     EXPECT_EQ(value.AsString(), "hello");
 }
 
-TEST(JsonParserTest, ParsesStringWithEscapes)
+TEST_F(JsonParserTest, ParsesStringWithEscapes)
 {
     JsonValue value = JsonParser::Parse(R"("line\nbreak\tand\\backslash\"quote")");
     EXPECT_EQ(value.AsString(), "line\nbreak\tand\\backslash\"quote");
 }
 
-TEST(JsonParserTest, ParsesStringWithUnicodeEscape)
+TEST_F(JsonParserTest, ParsesStringWithUnicodeEscape)
 {
     JsonValue value = JsonParser::Parse("\"\\u0041\\u0042\"");
     EXPECT_EQ(value.AsString(), "AB");
 }
 
-TEST(JsonParserTest, ParsesEmptyArray)
+TEST_F(JsonParserTest, ParsesEmptyArray)
 {
     JsonValue value = JsonParser::Parse("[]");
     EXPECT_TRUE(value.IsArray());
     EXPECT_EQ(value.AsArray().size(), 0u);
 }
 
-TEST(JsonParserTest, ParsesArrayOfMixedTypes)
+TEST_F(JsonParserTest, ParsesArrayOfMixedTypes)
 {
     JsonValue value = JsonParser::Parse(R"([1, "two", true, null, 3.5])");
     ASSERT_TRUE(value.IsArray());
@@ -75,14 +89,14 @@ TEST(JsonParserTest, ParsesArrayOfMixedTypes)
     EXPECT_DOUBLE_EQ(value[4].AsNumber(), 3.5);
 }
 
-TEST(JsonParserTest, ParsesEmptyObject)
+TEST_F(JsonParserTest, ParsesEmptyObject)
 {
     JsonValue value = JsonParser::Parse("{}");
     EXPECT_TRUE(value.IsObject());
     EXPECT_EQ(value.AsObject().size(), 0u);
 }
 
-TEST(JsonParserTest, ParsesObjectWithMembers)
+TEST_F(JsonParserTest, ParsesObjectWithMembers)
 {
     JsonValue value = JsonParser::Parse(R"({"name": "Alice", "age": 30, "active": true})");
     ASSERT_TRUE(value.IsObject());
@@ -91,7 +105,7 @@ TEST(JsonParserTest, ParsesObjectWithMembers)
     EXPECT_TRUE(value["active"].AsBoolean());
 }
 
-TEST(JsonParserTest, ParsesNestedObjectsAndArrays)
+TEST_F(JsonParserTest, ParsesNestedObjectsAndArrays)
 {
     JsonValue value = JsonParser::Parse(R"(
         {
@@ -110,7 +124,7 @@ TEST(JsonParserTest, ParsesNestedObjectsAndArrays)
     EXPECT_DOUBLE_EQ(value["count"].AsNumber(), 3.0);
 }
 
-TEST(JsonParserTest, IgnoresLeadingAndTrailingWhitespace)
+TEST_F(JsonParserTest, IgnoresLeadingAndTrailingWhitespace)
 {
     JsonValue value = JsonParser::Parse("  \n\t [ 1 , 2 ]  \n");
     ASSERT_TRUE(value.IsArray());
@@ -118,49 +132,46 @@ TEST(JsonParserTest, IgnoresLeadingAndTrailingWhitespace)
     EXPECT_DOUBLE_EQ(value[1].AsNumber(), 2.0);
 }
 
-TEST(JsonParserTest, ThrowsOnEmptyInput)
+TEST_F(JsonParserTest, ThrowsOnEmptyInput)
 {
     EXPECT_THROW(JsonParser::Parse(""), JsonParseException);
 }
 
-TEST(JsonParserTest, ThrowsOnInvalidLiteral)
+TEST_F(JsonParserTest, ThrowsOnInvalidLiteral)
 {
     EXPECT_THROW(JsonParser::Parse("nul"), JsonParseException);
     EXPECT_THROW(JsonParser::Parse("True"), JsonParseException);
 }
 
-TEST(JsonParserTest, ThrowsOnUnterminatedString)
+TEST_F(JsonParserTest, ThrowsOnUnterminatedString)
 {
     EXPECT_THROW(JsonParser::Parse("\"unterminated"), JsonParseException);
 }
 
-TEST(JsonParserTest, ThrowsOnTrailingGarbage)
+TEST_F(JsonParserTest, ThrowsOnTrailingGarbage)
 {
     EXPECT_THROW(JsonParser::Parse("123 456"), JsonParseException);
 }
 
-TEST(JsonParserTest, ThrowsOnMismatchedBrackets)
+TEST_F(JsonParserTest, ThrowsOnMismatchedBrackets)
 {
     EXPECT_THROW(JsonParser::Parse("[1, 2"), JsonParseException);
     EXPECT_THROW(JsonParser::Parse("{\"a\": 1"), JsonParseException);
     EXPECT_THROW(JsonParser::Parse("[1, 2,]"), JsonParseException);
 }
 
-TEST(JsonParserTest, ParsesFromFile)
+TEST_F(JsonParserTest, ParsesFromFile)
 {
-    const std::string path = "json_parser_test_input.json";
     {
-        std::ofstream out(path, std::ios::binary);
+        std::ofstream out(path_, std::ios::binary);
         out << R"({"key": "value"})";
     }
 
-    JsonValue value = JsonParser::ParseFile(path);
+    JsonValue value = JsonParser::ParseFile(path_);
     EXPECT_EQ(value["key"].AsString(), "value");
-
-    std::remove(path.c_str());
 }
 
-TEST(JsonParserTest, ThrowsWhenFileDoesNotExist)
+TEST_F(JsonParserTest, ThrowsWhenFileDoesNotExist)
 {
     EXPECT_THROW(JsonParser::ParseFile("no_such_file.json"), JsonParseException);
 }
