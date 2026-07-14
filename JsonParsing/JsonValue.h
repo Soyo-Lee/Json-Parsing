@@ -6,6 +6,8 @@
 #include <utility>
 #include <stdexcept>
 
+using std::vector;
+
 class JsonValue
 {
 public:
@@ -19,8 +21,8 @@ public:
         Object
     };
 
-    using ArrayType = std::vector<JsonValue>;
-    using ObjectType = std::vector<std::pair<std::string, JsonValue>>;
+    using ArrayType = vector<JsonValue>;
+    using ObjectType = vector<std::pair<std::string, JsonValue>>;
 
     JsonValue();
     JsonValue(std::nullptr_t);
