@@ -31,7 +31,8 @@ Development follows TDD, tracked across `docs/phase1.md` (JsonValue), `docs/phas
 
 - `JsonValue.h`/`.cpp` — the value type. Represents null, boolean, number (`double`), string, array, and object via `std::variant<std::monostate, bool, double, std::string, ArrayType, ObjectType>`, where `ArrayType = std::vector<JsonValue>` and `ObjectType = std::vector<std::pair<std::string, JsonValue>>` (insertion order preserved, unlike `std::map`). Type checks (`IsNull`/`IsBoolean`/...), typed accessors (`AsBoolean`/`AsNumber`/`AsString`/`AsArray`/`AsObject`), and `operator[]` for array index / object key access. Accessing the wrong type throws `JsonTypeException`; indexing an object with a missing key throws on the `const` overload but auto-inserts a `Null` entry on the mutable overload (matches `std::map::operator[]`).
 - `JsonValueTest.cpp` — gtest cases for construction, type predicates, accessors, indexing, and exception behavior.
-- `JsonParser` (planned, see `docs/phase2.md`) — JSON text → `JsonValue` tree.
+- `JsonParser.h`/`.cpp` — recursive-descent parser, JSON text → `JsonValue` tree. `Parse(text)` parses a string; `ParseFile(path)` reads a file then parses it. Handles null/bool/number (incl. negative/decimal/exponent)/string (incl. escapes and `\uXXXX`, BMP only — no surrogate-pair decoding)/array/object, with whitespace skipped between tokens. Any syntax error (empty input, invalid literal, unterminated string, mismatched brackets, trailing garbage, missing file) throws `JsonParseException` with the byte offset where parsing failed.
+- `JsonParserTest.cpp` — gtest cases covering each value type, nesting, whitespace tolerance, and the error paths above.
 - `JsonWriter` (planned, see `docs/phase3.md`) — `JsonValue` tree → JSON text, plus save-to-file.
 
 Update this section as the parser/writer files are added, following the pattern above (list each file and what it owns).

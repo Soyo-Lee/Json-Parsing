@@ -9,4 +9,6 @@
 
 ## 상태
 
-- [ ] `JsonParser.h` / `JsonParser.cpp` 작성
+- [x] `JsonParserTest.cpp` 작성 완료 (RED) — 21개 테스트
+- [x] `JsonParser.h` / `JsonParser.cpp` 작성 완료 (GREEN) — 재귀 하강 파서, `\uXXXX` 이스케이프는 BMP 범위만 UTF-8로 인코딩 (서로게이트 쌍 미지원)
+- [x] 전체 테스트(33개) 통과 확인
