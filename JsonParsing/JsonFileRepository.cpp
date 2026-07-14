@@ -84,12 +84,34 @@ const JsonValue* JsonFileRepository::ReadById(const std::string& id) const
     return nullptr;
 }
 
-bool JsonFileRepository::Update(const std::string&, const JsonValue::ObjectType&)
+bool JsonFileRepository::Update(const std::string& id, const JsonValue::ObjectType& fields)
 {
-    throw CrudNotImplementedException("JsonFileRepository::Update is not implemented yet (see docs/phase5.md)");
+    for (JsonValue& entry : records_.AsArray())
+    {
+        if (entry.IsObject() && entry.HasKey(idField_) && entry[idField_].AsString() == id)
+        {
+            for (const auto& field : fields)
+            {
+                entry[field.first] = field.second;
+            }
+            Save();
+            return true;
+        }
+    }
+    return false;
 }
 
-bool JsonFileRepository::Delete(const std::string&)
+bool JsonFileRepository::Delete(const std::string& id)
 {
-    throw CrudNotImplementedException("JsonFileRepository::Delete is not implemented yet (see docs/phase5.md)");
+    JsonValue::ArrayType& array = records_.AsArray();
+    for (auto it = array.begin(); it != array.end(); ++it)
+    {
+        if (it->IsObject() && it->HasKey(idField_) && (*it)[idField_].AsString() == id)
+        {
+            array.erase(it);
+            Save();
+            return true;
+        }
+    }
+    return false;
 }

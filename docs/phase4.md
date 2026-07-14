@@ -19,5 +19,5 @@
 
 - [x] `ICrudRepository.h` 작성 완료 (Create/Read/Update/Delete 네 메서드 모두 선언)
 - [x] `JsonFileRepositoryTest.cpp` 작성 완료 (RED) — Create/Read 11개 테스트 (id 자동/수동 채번, 목록/단건 조회, 파일 영속성, 잘못된 타입, Update/Delete 미구현 확인 포함)
-- [x] `JsonFileRepository.h` / `.cpp` 작성 완료 (GREEN) — Create/ReadAll/ReadById 구현, Update/Delete는 `CrudNotImplementedException`을 던지는 자리표시자
+- [x] `JsonFileRepository.h` / `.cpp` 작성 완료 (GREEN) — Create/ReadAll/ReadById 구현, Update/Delete는 `CrudNotImplementedException`을 던지는 자리표시자 (Phase 5에서 실제 구현으로 교체, 예외 클래스는 제거됨)
 - [x] 전체 테스트(55개) 통과 확인

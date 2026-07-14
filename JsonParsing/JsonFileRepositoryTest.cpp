@@ -114,15 +114,107 @@ TEST_F(JsonFileRepositoryTest, CreatePersistsAcrossInstances)
     EXPECT_EQ(reopened.ReadAll()[0]["name"].AsString(), "Carol");
 }
 
-TEST_F(JsonFileRepositoryTest, UpdateIsNotYetImplemented)
+TEST_F(JsonFileRepositoryTest, UpdateMergesFieldsIntoExistingRecord)
+{
+    JsonFileRepository repo(path_);
+    JsonValue record = JsonValue::MakeObject();
+    record["name"] = JsonValue("Alice");
+    record["age"] = JsonValue(30);
+    JsonValue created = repo.Create(record);
+
+    JsonValue::ObjectType fields;
+    fields.emplace_back("age", JsonValue(31));
+    bool updated = repo.Update(created["id"].AsString(), fields);
+
+    EXPECT_TRUE(updated);
+    const JsonValue* found = repo.ReadById(created["id"].AsString());
+    ASSERT_NE(found, nullptr);
+    EXPECT_EQ((*found)["name"].AsString(), "Alice");
+    EXPECT_DOUBLE_EQ((*found)["age"].AsNumber(), 31.0);
+}
+
+TEST_F(JsonFileRepositoryTest, UpdateAddsNewFieldNotPreviouslyPresent)
+{
+    JsonFileRepository repo(path_);
+    JsonValue created = repo.Create(JsonValue::MakeObject());
+
+    JsonValue::ObjectType fields;
+    fields.emplace_back("email", JsonValue("alice@example.com"));
+    repo.Update(created["id"].AsString(), fields);
+
+    const JsonValue* found = repo.ReadById(created["id"].AsString());
+    ASSERT_NE(found, nullptr);
+    EXPECT_EQ((*found)["email"].AsString(), "alice@example.com");
+}
+
+TEST_F(JsonFileRepositoryTest, UpdateReturnsFalseWhenIdMissing)
 {
     JsonFileRepository repo(path_);
     JsonValue::ObjectType fields;
-    EXPECT_THROW(repo.Update("1", fields), CrudNotImplementedException);
+    fields.emplace_back("name", JsonValue("Nobody"));
+
+    EXPECT_FALSE(repo.Update("no-such-id", fields));
 }
 
-TEST_F(JsonFileRepositoryTest, DeleteIsNotYetImplemented)
+TEST_F(JsonFileRepositoryTest, UpdatePersistsAcrossInstances)
+{
+    std::string id;
+    {
+        JsonFileRepository repo(path_);
+        JsonValue created = repo.Create(JsonValue::MakeObject());
+        id = created["id"].AsString();
+
+        JsonValue::ObjectType fields;
+        fields.emplace_back("name", JsonValue("Dave"));
+        repo.Update(id, fields);
+    }
+
+    JsonFileRepository reopened(path_);
+    const JsonValue* found = reopened.ReadById(id);
+    ASSERT_NE(found, nullptr);
+    EXPECT_EQ((*found)["name"].AsString(), "Dave");
+}
+
+TEST_F(JsonFileRepositoryTest, DeleteRemovesRecord)
 {
     JsonFileRepository repo(path_);
-    EXPECT_THROW(repo.Delete("1"), CrudNotImplementedException);
+    JsonValue created = repo.Create(JsonValue::MakeObject());
+
+    bool deleted = repo.Delete(created["id"].AsString());
+
+    EXPECT_TRUE(deleted);
+    EXPECT_EQ(repo.ReadById(created["id"].AsString()), nullptr);
+    EXPECT_EQ(repo.ReadAll().size(), 0u);
+}
+
+TEST_F(JsonFileRepositoryTest, DeleteOnlyRemovesMatchingRecord)
+{
+    JsonFileRepository repo(path_);
+    JsonValue first = repo.Create(JsonValue::MakeObject());
+    JsonValue second = repo.Create(JsonValue::MakeObject());
+
+    repo.Delete(first["id"].AsString());
+
+    EXPECT_EQ(repo.ReadAll().size(), 1u);
+    EXPECT_NE(repo.ReadById(second["id"].AsString()), nullptr);
+}
+
+TEST_F(JsonFileRepositoryTest, DeleteReturnsFalseWhenIdMissing)
+{
+    JsonFileRepository repo(path_);
+    EXPECT_FALSE(repo.Delete("no-such-id"));
+}
+
+TEST_F(JsonFileRepositoryTest, DeletePersistsAcrossInstances)
+{
+    std::string id;
+    {
+        JsonFileRepository repo(path_);
+        JsonValue created = repo.Create(JsonValue::MakeObject());
+        id = created["id"].AsString();
+        repo.Delete(id);
+    }
+
+    JsonFileRepository reopened(path_);
+    EXPECT_EQ(reopened.ReadAll().size(), 0u);
 }

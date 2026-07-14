@@ -2,15 +2,7 @@
 
 #include "JsonValue.h"
 
-#include <stdexcept>
 #include <string>
-
-// Update/Delete는 Phase 5에서 구현된다. 그 전까지 구현체는 이 예외를 던진다.
-class CrudNotImplementedException : public std::logic_error
-{
-public:
-    explicit CrudNotImplementedException(const std::string& message) : std::logic_error(message) {}
-};
 
 // 저장 방식(파일/DB 등)에 무관하게 호출 측이 의존할 수 있는 CRUD 인터페이스.
 class ICrudRepository
