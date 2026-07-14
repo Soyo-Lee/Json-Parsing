@@ -1,4 +1,4 @@
-#ifdef _DEBUG
+﻿#ifdef _DEBUG
 
 #include "gmock/gmock.h"
 
@@ -14,11 +14,29 @@ int main(int argc, char** argv)
 #include "JsonFileRepository.h"
 #include "JsonWriter.h"
 
+#include <Windows.h>
+
 #include <iostream>
 #include <string>
 
 namespace
 {
+
+// std::getline만 쓰면 CRLF로 리다이렉트된 입력에서 개행 앞의 '\r'이 문자열 끝에
+// 남아 "1" 같은 비교가 "1\r"과 맞지 않아 실패한다. 콘솔에서 사람이 직접 입력할
+// 때는 보통 문제되지 않지만, 파일/파이프 입력을 대비해 항상 이 함수로 읽는다.
+bool ReadLine(std::string& out)
+{
+    if (!std::getline(std::cin, out))
+    {
+        return false;
+    }
+    if (!out.empty() && out.back() == '\r')
+    {
+        out.pop_back();
+    }
+    return true;
+}
 
 void PrintRecord(const JsonValue& record)
 {
@@ -30,7 +48,7 @@ JsonValue::ObjectType ReadFieldsFromConsole()
     std::cout << "필드를 \"키=값\" 형태로 한 줄씩 입력하세요. 빈 줄을 입력하면 종료합니다.\n";
     JsonValue::ObjectType fields;
     std::string line;
-    while (std::getline(std::cin, line) && !line.empty())
+    while (ReadLine(line) && !line.empty())
     {
         size_t equalsPos = line.find('=');
         if (equalsPos == std::string::npos)
@@ -71,7 +89,7 @@ void HandleReadById(const JsonFileRepository& repo)
 {
     std::cout << "조회할 ID를 입력하세요: ";
     std::string id;
-    std::getline(std::cin, id);
+    ReadLine(id);
 
     const JsonValue* found = repo.ReadById(id);
     if (found == nullptr)
@@ -86,7 +104,7 @@ void HandleRead(const JsonFileRepository& repo)
 {
     std::cout << "1. 전체 목록 보기\n2. ID로 검색\n선택: ";
     std::string choice;
-    std::getline(std::cin, choice);
+    ReadLine(choice);
 
     if (choice == "2")
     {
@@ -102,7 +120,7 @@ void HandleUpdate(JsonFileRepository& repo)
 {
     std::cout << "수정할 ID를 입력하세요: ";
     std::string id;
-    std::getline(std::cin, id);
+    ReadLine(id);
 
     if (repo.ReadById(id) == nullptr)
     {
@@ -119,11 +137,11 @@ void HandleDelete(JsonFileRepository& repo)
 {
     std::cout << "삭제할 ID를 입력하세요: ";
     std::string id;
-    std::getline(std::cin, id);
+    ReadLine(id);
 
     std::cout << "정말 삭제하시겠습니까? (y/n): ";
     std::string confirm;
-    std::getline(std::cin, confirm);
+    ReadLine(confirm);
     if (confirm != "y" && confirm != "Y")
     {
         std::cout << "삭제를 취소했습니다.\n";
@@ -149,10 +167,16 @@ void PrintMenu()
 
 int main()
 {
+    // 소스 문자열 리터럴은 /utf-8 컴파일 옵션으로 UTF-8 바이트로 인코딩된다.
+    // 콘솔의 입출력 코드페이지도 UTF-8(65001)로 맞추지 않으면 시스템 기본
+    // 코드페이지(한국어 Windows는 CP949)로 잘못 해석되어 한글이 깨진다.
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+
     JsonFileRepository repo("records.json");
 
     std::string choice;
-    while (PrintMenu(), std::getline(std::cin, choice))
+    while (PrintMenu(), ReadLine(choice))
     {
         if (choice == "1") HandleCreate(repo);
         else if (choice == "2") HandleRead(repo);

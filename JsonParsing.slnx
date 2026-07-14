@@ -3,6 +3,6 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="JsonParsing/JsonParsing.vcxproj" />
+  <Project Path="JsonParsing/JsonParsing.vcxproj" Id="254e14ec-65f6-4ca5-98f6-202024b784cb" />
   <Project Path="JsonParsingLib/JsonParsingLib.vcxproj" />
 </Solution>

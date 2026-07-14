@@ -2,20 +2,27 @@
 
 #include <gtest/gtest.h>
 
-TEST(JsonValueTest, DefaultConstructedIsNull)
+namespace
+{
+class JsonValueTest : public ::testing::Test
+{
+};
+} // namespace
+
+TEST_F(JsonValueTest, DefaultConstructedIsNull)
 {
     JsonValue value;
     EXPECT_TRUE(value.IsNull());
     EXPECT_EQ(value.GetType(), JsonValue::Type::Null);
 }
 
-TEST(JsonValueTest, NullptrConstructedIsNull)
+TEST_F(JsonValueTest, NullptrConstructedIsNull)
 {
     JsonValue value(nullptr);
     EXPECT_TRUE(value.IsNull());
 }
 
-TEST(JsonValueTest, BooleanConstruction)
+TEST_F(JsonValueTest, BooleanConstruction)
 {
     JsonValue value(true);
     EXPECT_TRUE(value.IsBoolean());
@@ -26,7 +33,7 @@ TEST(JsonValueTest, BooleanConstruction)
     EXPECT_FALSE(falseValue.AsBoolean());
 }
 
-TEST(JsonValueTest, NumberConstructionFromDoubleAndInt)
+TEST_F(JsonValueTest, NumberConstructionFromDoubleAndInt)
 {
     JsonValue doubleValue(3.14);
     EXPECT_TRUE(doubleValue.IsNumber());
@@ -37,7 +44,7 @@ TEST(JsonValueTest, NumberConstructionFromDoubleAndInt)
     EXPECT_DOUBLE_EQ(intValue.AsNumber(), 42.0);
 }
 
-TEST(JsonValueTest, StringConstructionFromStdStringAndCString)
+TEST_F(JsonValueTest, StringConstructionFromStdStringAndCString)
 {
     JsonValue stringValue(std::string("hello"));
     EXPECT_TRUE(stringValue.IsString());
@@ -48,7 +55,7 @@ TEST(JsonValueTest, StringConstructionFromStdStringAndCString)
     EXPECT_EQ(cStringValue.AsString(), "world");
 }
 
-TEST(JsonValueTest, ArrayConstructionAndIndexing)
+TEST_F(JsonValueTest, ArrayConstructionAndIndexing)
 {
     JsonValue::ArrayType elements;
     elements.push_back(JsonValue(1));
@@ -63,7 +70,7 @@ TEST(JsonValueTest, ArrayConstructionAndIndexing)
     EXPECT_TRUE(array[2].AsBoolean());
 }
 
-TEST(JsonValueTest, MakeArrayStartsEmptyAndSupportsPushBack)
+TEST_F(JsonValueTest, MakeArrayStartsEmptyAndSupportsPushBack)
 {
     JsonValue array = JsonValue::MakeArray();
     EXPECT_TRUE(array.IsArray());
@@ -73,7 +80,7 @@ TEST(JsonValueTest, MakeArrayStartsEmptyAndSupportsPushBack)
     EXPECT_EQ(array.AsArray().size(), 1u);
 }
 
-TEST(JsonValueTest, ObjectConstructionAndKeyAccess)
+TEST_F(JsonValueTest, ObjectConstructionAndKeyAccess)
 {
     JsonValue object = JsonValue::MakeObject();
     EXPECT_TRUE(object.IsObject());
@@ -88,7 +95,7 @@ TEST(JsonValueTest, ObjectConstructionAndKeyAccess)
     EXPECT_DOUBLE_EQ(object["age"].AsNumber(), 30.0);
 }
 
-TEST(JsonValueTest, ConstObjectKeyAccessThrowsWhenKeyMissing)
+TEST_F(JsonValueTest, ConstObjectKeyAccessThrowsWhenKeyMissing)
 {
     JsonValue object = JsonValue::MakeObject();
     object["name"] = JsonValue("Alice");
@@ -98,7 +105,7 @@ TEST(JsonValueTest, ConstObjectKeyAccessThrowsWhenKeyMissing)
     EXPECT_THROW(constObject["missing"], JsonTypeException);
 }
 
-TEST(JsonValueTest, MismatchedAccessorThrows)
+TEST_F(JsonValueTest, MismatchedAccessorThrows)
 {
     JsonValue value(true);
     EXPECT_THROW(value.AsNumber(), JsonTypeException);
@@ -107,7 +114,7 @@ TEST(JsonValueTest, MismatchedAccessorThrows)
     EXPECT_THROW(value.AsObject(), JsonTypeException);
 }
 
-TEST(JsonValueTest, ArrayIndexOutOfRangeThrows)
+TEST_F(JsonValueTest, ArrayIndexOutOfRangeThrows)
 {
     JsonValue array = JsonValue::MakeArray();
     array.AsArray().push_back(JsonValue(1));
@@ -116,7 +123,7 @@ TEST(JsonValueTest, ArrayIndexOutOfRangeThrows)
     EXPECT_THROW(array[1], JsonTypeException);
 }
 
-TEST(JsonValueTest, IndexingNonArrayNonObjectThrows)
+TEST_F(JsonValueTest, IndexingNonArrayNonObjectThrows)
 {
     JsonValue value(42);
     EXPECT_THROW(value[0], JsonTypeException);
