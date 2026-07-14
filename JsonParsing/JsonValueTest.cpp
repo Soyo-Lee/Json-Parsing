@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+using std::string;
+
 namespace
 {
 class JsonValueTest : public ::testing::Test
@@ -46,7 +48,7 @@ TEST_F(JsonValueTest, NumberConstructionFromDoubleAndInt)
 
 TEST_F(JsonValueTest, StringConstructionFromStdStringAndCString)
 {
-    JsonValue stringValue(std::string("hello"));
+    JsonValue stringValue(string("hello"));
     EXPECT_TRUE(stringValue.IsString());
     EXPECT_EQ(stringValue.AsString(), "hello");
 

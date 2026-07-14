@@ -6,15 +6,23 @@
 #include <algorithm>
 #include <fstream>
 
-JsonFileRepository::JsonFileRepository(std::string filePath, std::string idField)
-    : filePath_(std::move(filePath)), idField_(std::move(idField)), records_(JsonValue::MakeArray())
+using std::exception;
+using std::ifstream;
+using std::ios;
+using std::max;
+using std::move;
+using std::stoull;
+using std::to_string;
+
+JsonFileRepository::JsonFileRepository(string filePath, string idField)
+    : filePath_(move(filePath)), idField_(move(idField)), records_(JsonValue::MakeArray())
 {
     Load();
 }
 
 void JsonFileRepository::Load()
 {
-    std::ifstream existing(filePath_, std::ios::binary);
+    ifstream existing(filePath_, ios::binary);
     if (existing)
     {
         records_ = JsonParser::ParseFile(filePath_);
@@ -30,7 +38,7 @@ void JsonFileRepository::Save() const
     JsonWriter::SaveToFile(records_, filePath_, /*pretty=*/true);
 }
 
-std::string JsonFileRepository::GenerateNextId() const
+string JsonFileRepository::GenerateNextId() const
 {
     unsigned long long maxId = 0;
     for (const JsonValue& entry : records_.AsArray())
@@ -39,15 +47,15 @@ std::string JsonFileRepository::GenerateNextId() const
         {
             try
             {
-                maxId = std::max(maxId, std::stoull(entry[idField_].AsString()));
+                maxId = max(maxId, stoull(entry[idField_].AsString()));
             }
-            catch (const std::exception&)
+            catch (const exception&)
             {
                 // Non-numeric id (e.g. a caller-supplied id): ignore it for auto-numbering purposes.
             }
         }
     }
-    return std::to_string(maxId + 1);
+    return to_string(maxId + 1);
 }
 
 JsonValue JsonFileRepository::Create(JsonValue record)
@@ -72,7 +80,7 @@ const JsonValue::ArrayType& JsonFileRepository::ReadAll() const
     return records_.AsArray();
 }
 
-const JsonValue* JsonFileRepository::ReadById(const std::string& id) const
+const JsonValue* JsonFileRepository::ReadById(const string& id) const
 {
     for (const JsonValue& entry : records_.AsArray())
     {
@@ -84,7 +92,7 @@ const JsonValue* JsonFileRepository::ReadById(const std::string& id) const
     return nullptr;
 }
 
-bool JsonFileRepository::Update(const std::string& id, const JsonValue::ObjectType& fields)
+bool JsonFileRepository::Update(const string& id, const JsonValue::ObjectType& fields)
 {
     for (JsonValue& entry : records_.AsArray())
     {
@@ -101,7 +109,7 @@ bool JsonFileRepository::Update(const std::string& id, const JsonValue::ObjectTy
     return false;
 }
 
-bool JsonFileRepository::Delete(const std::string& id)
+bool JsonFileRepository::Delete(const string& id)
 {
     JsonValue::ArrayType& array = records_.AsArray();
     for (auto it = array.begin(); it != array.end(); ++it)

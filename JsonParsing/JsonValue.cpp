@@ -1,8 +1,11 @@
 #include "JsonValue.h"
 
-JsonValue::JsonValue() : type_(Type::Null), value_(std::monostate{}) {}
+using std::get;
+using std::move;
 
-JsonValue::JsonValue(std::nullptr_t) : type_(Type::Null), value_(std::monostate{}) {}
+JsonValue::JsonValue() : type_(Type::Null), value_(monostate{}) {}
+
+JsonValue::JsonValue(nullptr_t) : type_(Type::Null), value_(monostate{}) {}
 
 JsonValue::JsonValue(bool value) : type_(Type::Boolean), value_(value) {}
 
@@ -10,13 +13,13 @@ JsonValue::JsonValue(double value) : type_(Type::Number), value_(value) {}
 
 JsonValue::JsonValue(int value) : type_(Type::Number), value_(static_cast<double>(value)) {}
 
-JsonValue::JsonValue(const char* value) : type_(Type::String), value_(std::string(value)) {}
+JsonValue::JsonValue(const char* value) : type_(Type::String), value_(string(value)) {}
 
-JsonValue::JsonValue(std::string value) : type_(Type::String), value_(std::move(value)) {}
+JsonValue::JsonValue(string value) : type_(Type::String), value_(move(value)) {}
 
-JsonValue::JsonValue(ArrayType value) : type_(Type::Array), value_(std::move(value)) {}
+JsonValue::JsonValue(ArrayType value) : type_(Type::Array), value_(move(value)) {}
 
-JsonValue::JsonValue(ObjectType value) : type_(Type::Object), value_(std::move(value)) {}
+JsonValue::JsonValue(ObjectType value) : type_(Type::Object), value_(move(value)) {}
 
 bool JsonValue::AsBoolean() const
 {
@@ -24,7 +27,7 @@ bool JsonValue::AsBoolean() const
     {
         throw JsonTypeException("JsonValue is not a Boolean");
     }
-    return std::get<bool>(value_);
+    return get<bool>(value_);
 }
 
 double JsonValue::AsNumber() const
@@ -33,16 +36,16 @@ double JsonValue::AsNumber() const
     {
         throw JsonTypeException("JsonValue is not a Number");
     }
-    return std::get<double>(value_);
+    return get<double>(value_);
 }
 
-const std::string& JsonValue::AsString() const
+const string& JsonValue::AsString() const
 {
     if (type_ != Type::String)
     {
         throw JsonTypeException("JsonValue is not a String");
     }
-    return std::get<std::string>(value_);
+    return get<string>(value_);
 }
 
 const JsonValue::ArrayType& JsonValue::AsArray() const
@@ -51,7 +54,7 @@ const JsonValue::ArrayType& JsonValue::AsArray() const
     {
         throw JsonTypeException("JsonValue is not an Array");
     }
-    return std::get<ArrayType>(value_);
+    return get<ArrayType>(value_);
 }
 
 const JsonValue::ObjectType& JsonValue::AsObject() const
@@ -60,7 +63,7 @@ const JsonValue::ObjectType& JsonValue::AsObject() const
     {
         throw JsonTypeException("JsonValue is not an Object");
     }
-    return std::get<ObjectType>(value_);
+    return get<ObjectType>(value_);
 }
 
 JsonValue::ArrayType& JsonValue::AsArray()
@@ -69,7 +72,7 @@ JsonValue::ArrayType& JsonValue::AsArray()
     {
         throw JsonTypeException("JsonValue is not an Array");
     }
-    return std::get<ArrayType>(value_);
+    return get<ArrayType>(value_);
 }
 
 JsonValue::ObjectType& JsonValue::AsObject()
@@ -78,7 +81,7 @@ JsonValue::ObjectType& JsonValue::AsObject()
     {
         throw JsonTypeException("JsonValue is not an Object");
     }
-    return std::get<ObjectType>(value_);
+    return get<ObjectType>(value_);
 }
 
 JsonValue& JsonValue::operator[](size_t index)
@@ -101,7 +104,7 @@ const JsonValue& JsonValue::operator[](size_t index) const
     return array[index];
 }
 
-JsonValue& JsonValue::operator[](const std::string& key)
+JsonValue& JsonValue::operator[](const string& key)
 {
     ObjectType& object = AsObject();
     for (auto& entry : object)
@@ -115,7 +118,7 @@ JsonValue& JsonValue::operator[](const std::string& key)
     return object.back().second;
 }
 
-const JsonValue& JsonValue::operator[](const std::string& key) const
+const JsonValue& JsonValue::operator[](const string& key) const
 {
     const ObjectType& object = AsObject();
     for (const auto& entry : object)
@@ -128,7 +131,7 @@ const JsonValue& JsonValue::operator[](const std::string& key) const
     throw JsonTypeException("Object has no key: " + key);
 }
 
-bool JsonValue::HasKey(const std::string& key) const
+bool JsonValue::HasKey(const string& key) const
 {
     const ObjectType& object = AsObject();
     for (const auto& entry : object)

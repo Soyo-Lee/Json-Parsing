@@ -19,15 +19,21 @@ int main(int argc, char** argv)
 #include <iostream>
 #include <string>
 
+using std::cin;
+using std::cout;
+using std::getline;
+using std::move;
+using std::string;
+
 namespace
 {
 
-// std::getline만 쓰면 CRLF로 리다이렉트된 입력에서 개행 앞의 '\r'이 문자열 끝에
+// getline만 쓰면 CRLF로 리다이렉트된 입력에서 개행 앞의 '\r'이 문자열 끝에
 // 남아 "1" 같은 비교가 "1\r"과 맞지 않아 실패한다. 콘솔에서 사람이 직접 입력할
 // 때는 보통 문제되지 않지만, 파일/파이프 입력을 대비해 항상 이 함수로 읽는다.
-bool ReadLine(std::string& out)
+bool ReadLine(string& out)
 {
-    if (!std::getline(std::cin, out))
+    if (!getline(cin, out))
     {
         return false;
     }
@@ -40,25 +46,25 @@ bool ReadLine(std::string& out)
 
 void PrintRecord(const JsonValue& record)
 {
-    std::cout << JsonWriter::Write(record, /*pretty=*/true) << "\n";
+    cout << JsonWriter::Write(record, /*pretty=*/true) << "\n";
 }
 
 JsonValue::ObjectType ReadFieldsFromConsole()
 {
-    std::cout << "필드를 \"키=값\" 형태로 한 줄씩 입력하세요. 빈 줄을 입력하면 종료합니다.\n";
+    cout << "필드를 \"키=값\" 형태로 한 줄씩 입력하세요. 빈 줄을 입력하면 종료합니다.\n";
     JsonValue::ObjectType fields;
-    std::string line;
+    string line;
     while (ReadLine(line) && !line.empty())
     {
         size_t equalsPos = line.find('=');
-        if (equalsPos == std::string::npos)
+        if (equalsPos == string::npos)
         {
-            std::cout << "형식이 올바르지 않습니다 (키=값). 다시 입력하세요.\n";
+            cout << "형식이 올바르지 않습니다 (키=값). 다시 입력하세요.\n";
             continue;
         }
-        std::string key = line.substr(0, equalsPos);
-        std::string value = line.substr(equalsPos + 1);
-        fields.emplace_back(std::move(key), JsonValue(std::move(value)));
+        string key = line.substr(0, equalsPos);
+        string value = line.substr(equalsPos + 1);
+        fields.emplace_back(move(key), JsonValue(move(value)));
     }
     return fields;
 }
@@ -67,7 +73,7 @@ void HandleCreate(JsonFileRepository& repo)
 {
     JsonValue record(ReadFieldsFromConsole());
     JsonValue created = repo.Create(record);
-    std::cout << "생성됨:\n";
+    cout << "생성됨:\n";
     PrintRecord(created);
 }
 
@@ -76,7 +82,7 @@ void HandleReadAll(const JsonFileRepository& repo)
     const auto& all = repo.ReadAll();
     if (all.empty())
     {
-        std::cout << "저장된 데이터가 없습니다.\n";
+        cout << "저장된 데이터가 없습니다.\n";
         return;
     }
     for (const JsonValue& record : all)
@@ -87,14 +93,14 @@ void HandleReadAll(const JsonFileRepository& repo)
 
 void HandleReadById(const JsonFileRepository& repo)
 {
-    std::cout << "조회할 ID를 입력하세요: ";
-    std::string id;
+    cout << "조회할 ID를 입력하세요: ";
+    string id;
     ReadLine(id);
 
     const JsonValue* found = repo.ReadById(id);
     if (found == nullptr)
     {
-        std::cout << "해당 ID의 데이터를 찾을 수 없습니다.\n";
+        cout << "해당 ID의 데이터를 찾을 수 없습니다.\n";
         return;
     }
     PrintRecord(*found);
@@ -102,8 +108,8 @@ void HandleReadById(const JsonFileRepository& repo)
 
 void HandleRead(const JsonFileRepository& repo)
 {
-    std::cout << "1. 전체 목록 보기\n2. ID로 검색\n선택: ";
-    std::string choice;
+    cout << "1. 전체 목록 보기\n2. ID로 검색\n선택: ";
+    string choice;
     ReadLine(choice);
 
     if (choice == "2")
@@ -118,43 +124,43 @@ void HandleRead(const JsonFileRepository& repo)
 
 void HandleUpdate(JsonFileRepository& repo)
 {
-    std::cout << "수정할 ID를 입력하세요: ";
-    std::string id;
+    cout << "수정할 ID를 입력하세요: ";
+    string id;
     ReadLine(id);
 
     if (repo.ReadById(id) == nullptr)
     {
-        std::cout << "해당 ID의 데이터를 찾을 수 없습니다.\n";
+        cout << "해당 ID의 데이터를 찾을 수 없습니다.\n";
         return;
     }
 
     JsonValue::ObjectType fields = ReadFieldsFromConsole();
     bool updated = repo.Update(id, fields);
-    std::cout << (updated ? "수정되었습니다.\n" : "수정에 실패했습니다.\n");
+    cout << (updated ? "수정되었습니다.\n" : "수정에 실패했습니다.\n");
 }
 
 void HandleDelete(JsonFileRepository& repo)
 {
-    std::cout << "삭제할 ID를 입력하세요: ";
-    std::string id;
+    cout << "삭제할 ID를 입력하세요: ";
+    string id;
     ReadLine(id);
 
-    std::cout << "정말 삭제하시겠습니까? (y/n): ";
-    std::string confirm;
+    cout << "정말 삭제하시겠습니까? (y/n): ";
+    string confirm;
     ReadLine(confirm);
     if (confirm != "y" && confirm != "Y")
     {
-        std::cout << "삭제를 취소했습니다.\n";
+        cout << "삭제를 취소했습니다.\n";
         return;
     }
 
     bool deleted = repo.Delete(id);
-    std::cout << (deleted ? "삭제되었습니다.\n" : "해당 ID의 데이터를 찾을 수 없습니다.\n");
+    cout << (deleted ? "삭제되었습니다.\n" : "해당 ID의 데이터를 찾을 수 없습니다.\n");
 }
 
 void PrintMenu()
 {
-    std::cout << "\n=== JSON CRUD 콘솔 앱 ===\n"
+    cout << "\n=== JSON CRUD 콘솔 앱 ===\n"
                   "1. Create - 새 데이터 추가\n"
                   "2. Read   - 조회 (전체 목록 / ID 검색)\n"
                   "3. Update - 데이터 수정\n"
@@ -175,7 +181,7 @@ int main()
 
     JsonFileRepository repo("records.json");
 
-    std::string choice;
+    string choice;
     while (PrintMenu(), ReadLine(choice))
     {
         if (choice == "1") HandleCreate(repo);
@@ -183,10 +189,10 @@ int main()
         else if (choice == "3") HandleUpdate(repo);
         else if (choice == "4") HandleDelete(repo);
         else if (choice == "0") break;
-        else std::cout << "올바른 번호를 입력하세요.\n";
+        else cout << "올바른 번호를 입력하세요.\n";
     }
 
-    std::cout << "종료합니다.\n";
+    cout << "종료합니다.\n";
     return 0;
 }
 

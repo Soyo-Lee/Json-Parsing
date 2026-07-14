@@ -5,16 +5,22 @@
 #include <cstdio>
 #include <fstream>
 
-std::string JsonWriter::Write(const JsonValue& value, bool pretty, int indentSize)
+using std::array;
+using std::ios;
+using std::ofstream;
+using std::snprintf;
+using std::to_chars;
+
+string JsonWriter::Write(const JsonValue& value, bool pretty, int indentSize)
 {
-    std::string out;
+    string out;
     WriteValue(value, out, pretty, indentSize, 0);
     return out;
 }
 
-void JsonWriter::SaveToFile(const JsonValue& value, const std::string& path, bool pretty, int indentSize)
+void JsonWriter::SaveToFile(const JsonValue& value, const string& path, bool pretty, int indentSize)
 {
-    std::ofstream file(path, std::ios::binary);
+    ofstream file(path, ios::binary);
     if (!file)
     {
         throw JsonWriteException("Could not open file for writing: " + path);
@@ -26,7 +32,7 @@ void JsonWriter::SaveToFile(const JsonValue& value, const std::string& path, boo
     }
 }
 
-void JsonWriter::WriteValue(const JsonValue& value, std::string& out, bool pretty, int indentSize, int depth)
+void JsonWriter::WriteValue(const JsonValue& value, string& out, bool pretty, int indentSize, int depth)
 {
     switch (value.GetType())
     {
@@ -112,7 +118,7 @@ void JsonWriter::WriteValue(const JsonValue& value, std::string& out, bool prett
     }
 }
 
-void JsonWriter::WriteString(const std::string& text, std::string& out)
+void JsonWriter::WriteString(const string& text, string& out)
 {
     out += '"';
     for (unsigned char c : text)
@@ -130,7 +136,7 @@ void JsonWriter::WriteString(const std::string& text, std::string& out)
             if (c < 0x20)
             {
                 char buf[8];
-                std::snprintf(buf, sizeof(buf), "\\u%04x", c);
+                snprintf(buf, sizeof(buf), "\\u%04x", c);
                 out += buf;
             }
             else
@@ -142,14 +148,14 @@ void JsonWriter::WriteString(const std::string& text, std::string& out)
     out += '"';
 }
 
-void JsonWriter::WriteNumber(double number, std::string& out)
+void JsonWriter::WriteNumber(double number, string& out)
 {
-    std::array<char, 64> buffer{};
-    auto result = std::to_chars(buffer.data(), buffer.data() + buffer.size(), number);
+    array<char, 64> buffer{};
+    auto result = to_chars(buffer.data(), buffer.data() + buffer.size(), number);
     out.append(buffer.data(), result.ptr);
 }
 
-void JsonWriter::AppendIndent(std::string& out, int indentSize, int depth)
+void JsonWriter::AppendIndent(string& out, int indentSize, int depth)
 {
     out.append(static_cast<size_t>(indentSize) * static_cast<size_t>(depth), ' ');
 }
